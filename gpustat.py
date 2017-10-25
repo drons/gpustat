@@ -19,6 +19,7 @@ import platform
 import json
 import psutil
 import os.path
+import time
 
 import pynvml as N
 from blessings import Terminal
@@ -371,7 +372,7 @@ class GPUStatCollection(object):
 
     def print_formatted(self, fp=sys.stdout, force_color=False, no_color=False,
                         show_cmd=False, show_user=False, show_pid=False,
-                        show_power=None, gpuname_width=16,
+                        show_power=None, gpuname_width=16, **kwargs
                         ):
         # ANSI color configuration
         if force_color and no_color:
@@ -482,6 +483,8 @@ def main():
     parser.add_argument('-P', '--show-power', nargs='?', const='draw,limit',
                         choices=['', 'draw', 'limit', 'draw,limit', 'limit,draw'],
                         help='Show GPU power usage or draw (and/or limit)')
+    parser.add_argument('-i', '--interval', type=int, default=0, 
+                        help='Infinite update GPU stats with interval in seconds')
     parser.add_argument('--gpuname-width', type=int, default=16,
                         help='The minimum column width of GPU names, defaults to 16')
     parser.add_argument('--json', action='store_true', default=False,
@@ -492,7 +495,18 @@ def main():
                         version=('gpustat %s' % __version__))
     args = parser.parse_args()
 
-    print_gpustat(**vars(args))
+    if args.interval > 0:
+        term = Terminal()
+        with term.fullscreen():
+            while 1:
+                try:
+                    print(term.clear())
+                    print_gpustat(**vars(args))
+                    time.sleep(args.interval)
+                except KeyboardInterrupt as kb:
+                    exit(0)
+    else:
+        print_gpustat(**vars(args))
 
 if __name__ == '__main__':
     main()
