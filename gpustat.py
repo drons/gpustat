@@ -372,7 +372,7 @@ class GPUStatCollection(object):
 
     def print_formatted(self, fp=sys.stdout, force_color=False, no_color=False,
                         show_cmd=False, show_user=False, show_pid=False,
-                        show_power=None, gpuname_width=16, **kwargs
+                        show_power=None, gpuname_width=16, clear_term=False,**kwargs
                         ):
         # ANSI color configuration
         if force_color and no_color:
@@ -385,6 +385,8 @@ class GPUStatCollection(object):
         else:
             t_color = Terminal()   # auto, depending on isatty
 
+        if clear_term:
+            print(t_color.clear())
         # header
         time_format = locale.nl_langinfo(locale.D_T_FMT)
 
@@ -440,7 +442,7 @@ def new_query():
     return GPUStatCollection.new_query()
 
 
-def print_gpustat(json=False, debug=False, **args):
+def print_gpustat(json=False, debug=False, clear_term=False, **args):
     '''
     Display the GPU query results into standard output.
     '''
@@ -456,7 +458,7 @@ def print_gpustat(json=False, debug=False, **args):
     if json:
         gpu_stats.print_json(sys.stdout)
     else:
-        gpu_stats.print_formatted(sys.stdout, **args)
+        gpu_stats.print_formatted(sys.stdout, clear_term=clear_term, **args)
 
 
 def main():
@@ -500,8 +502,7 @@ def main():
         with term.fullscreen():
             while 1:
                 try:
-                    print(term.clear())
-                    print_gpustat(**vars(args))
+                    print_gpustat(clear_term=True, **vars(args))
                     time.sleep(args.interval)
                 except KeyboardInterrupt as kb:
                     exit(0)
